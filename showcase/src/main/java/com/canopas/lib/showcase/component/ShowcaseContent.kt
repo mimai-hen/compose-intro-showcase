@@ -1,28 +1,12 @@
 package com.canopas.lib.showcase.component
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
@@ -32,17 +16,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.absoluteValue
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.pow
-import kotlin.math.sqrt
+import kotlin.math.*
 
 @Composable
 fun ShowcasePopup(
@@ -50,15 +31,18 @@ fun ShowcasePopup(
     dismissOnClickOutside: Boolean,
     onShowCaseCompleted: () -> Unit,
 ) {
+    var showOverlay by remember { mutableStateOf(true) }
+
     state.currentTarget?.let {
         if (it.coordinates.isAttached) {
-            ShowcaseWindow {
+            ShowcaseOverlay(showOverlay) {
                 ShowcaseContent(
                     target = it,
                     dismissOnClickOutside = dismissOnClickOutside
                 ) {
                     state.currentTargetIndex++
                     if (state.currentTarget == null) {
+                        showOverlay = false
                         onShowCaseCompleted()
                     }
                 }
@@ -75,7 +59,7 @@ internal fun ShowcaseContent(
 ) {
 
     val targetCords = target.coordinates
-    val targetRect = targetCords.boundsInWindow()
+    val targetRect = targetCords.boundsInRoot()
 
     var dismissShowcaseRequest by remember(target) { mutableStateOf(false) }
 
