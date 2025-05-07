@@ -25,6 +25,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.*
 
+private val LocalStatusBarHeight = compositionLocalOf { 0 }
+
 @Composable
 fun ShowcasePopup(
     state: IntroShowcaseState,
@@ -35,15 +37,18 @@ fun ShowcasePopup(
 
     state.currentTarget?.let {
         if (it.coordinates.isAttached) {
-            ShowcaseOverlay(showOverlay) {
-                ShowcaseContent(
-                    target = it,
-                    dismissOnClickOutside = dismissOnClickOutside
-                ) {
-                    state.currentTargetIndex++
-                    if (state.currentTarget == null) {
-                        showOverlay = false
-                        onShowCaseCompleted()
+            val statusBarHeight = WindowInsets.safeDrawing.getTop(LocalDensity.current)
+            CompositionLocalProvider(LocalStatusBarHeight provides statusBarHeight) {
+                ShowcaseOverlay(showOverlay) {
+                    ShowcaseContent(
+                        target = it,
+                        dismissOnClickOutside = dismissOnClickOutside
+                    ) {
+                        state.currentTargetIndex++
+                        if (state.currentTarget == null) {
+                            showOverlay = false
+                            onShowCaseCompleted()
+                        }
                     }
                 }
             }
@@ -58,8 +63,11 @@ internal fun ShowcaseContent(
     onShowcaseCompleted: () -> Unit
 ) {
 
+    val statusBarHeight = LocalStatusBarHeight.current
     val targetCords = target.coordinates
-    val targetRect = targetCords.boundsInRoot()
+    val targetRectBounds = targetCords.boundsInRoot()
+    // Ajuster le rectangle cible
+    val targetRect = targetRectBounds.translate(0f, -statusBarHeight.toFloat())
 
     var dismissShowcaseRequest by remember(target) { mutableStateOf(false) }
 
